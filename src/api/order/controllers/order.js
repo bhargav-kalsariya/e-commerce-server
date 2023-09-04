@@ -21,28 +21,34 @@ module.exports = createCoreController('api::order.order', ({ strapi }) => ({
     async create(ctx) {
         try {
             const { products } = ctx.request.body;
-            const lineItems = products.map((product) => {
+            const lineItems = await Promise.all(products.map(async (product) => {
+                const productEntity = await strapi.entityService.findMany('api::product.product', {
+                    filters: {
+                        key: product.key
+                    }
+                });
+                const realProduct = productEntity[0];
                 const image = `http://localhost:1337${product.image}`
                 return {
                     price_data: {
                         currency: 'inr',
                         product_data: {
-                            name: product.title,
+                            name: realProduct.title,
                             images: [image]
                         },
-                        unit_amount: product.price * 100
+                        unit_amount: realProduct.price * 100
                     },
                     quantity: product.quantity
                 }
-            })
+            }));
             const session = await stripe.checkout.sessions.create({
                 shipping_address_collection: {
                     allowed_countries: ['IN']
                 },
                 line_items: lineItems,
                 mode: 'payment',
-                success_url: `${process.env.CLIENT_BASE_URL}?success=true`,
-                cancel_url: `${process.env.CLIENT_BASE_URL}?canceled=true`,
+                success_url: `${process.env.CLIENT_BASE_URL}/payments/success`,
+                cancel_url: `${process.env.CLIENT_BASE_URL}/payments/failed`,
             });
             await strapi.entityService.create('api::order.order', {
                 data: {
