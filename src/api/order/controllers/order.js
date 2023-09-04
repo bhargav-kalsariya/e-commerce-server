@@ -21,14 +21,14 @@ module.exports = createCoreController('api::order.order', ({ strapi }) => ({
     async create(ctx) {
         try {
             const { products } = ctx.request.body;
-            console.log('products', products)
-            const lineItems = products.map(product => {
+            const lineItems = products.map((product) => {
+                const image = `http://localhost:1337${product.image}`
                 return {
                     price_data: {
                         currency: 'inr',
                         product_data: {
                             name: product.title,
-                            images: [product.image]
+                            images: [image]
                         },
                         unit_amount: product.price * 100
                     },
@@ -52,7 +52,7 @@ module.exports = createCoreController('api::order.order', ({ strapi }) => ({
             })
             return { stripeId: session.id }
         } catch (error) {
-            console.log(error)
+            console.log('error', error)
             ctx.response.status = 500;
             return error;
         }
