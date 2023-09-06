@@ -28,7 +28,7 @@ module.exports = createCoreController('api::order.order', ({ strapi }) => ({
                     }
                 });
                 const realProduct = productEntity[0];
-                const image = `http://localhost:1337${product.image}`
+                const image = product.image
                 return {
                     price_data: {
                         currency: 'inr',
